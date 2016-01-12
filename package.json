@@ -1,7 +1,7 @@
 {
-  "name": "asyncli",
+  "name": "co-dispatchable",
   "version": "0.0.1",
-  "description": "A library for helping with cli interactions, based on es6 generators and async functions",
+  "description": "Generator runner with support for custom yield transformations",
   "main": "index.js",
   "scripts": {
     "compile": "babel --presets es2015 src/ -d lib",
@@ -12,7 +12,6 @@
     "test:watch": "nodemon --watch lib -q -x \"tape 'lib/**/*.spec.js' | faucet\""
   },
   "author": "Naissur <vlad.aituganov@gmail.com>",
-  "preferGlobal": true,
   "license": "ISC",
   "engines": {
     "node": ">= 4.0.0"
@@ -53,6 +52,15 @@
     "async",
     "es6",
     "generator",
-    "cli"
-  ]
+    "co",
+    "coroutine"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Naissur/co-dispatchable.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Naissur/co-dispatchable/issues"
+  },
+  "homepage": "https://github.com/Naissur/co-dispatchable#readme"
 }
