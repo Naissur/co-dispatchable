@@ -4,9 +4,9 @@ import combineYieldTransforms from './combineYieldTransforms';
 
 import jsc from 'jsverify';
 import assert from 'assert';
-// import {expectToFailWith} from './testUtils';
+import {expectToFailWith} from './testUtils';
 import test from 'blue-tape';
-// import Promise from 'bluebird';
+import Promise from 'bluebird';
 
 test('combineYieldTransforms exports a function by default', assert => {
   assert.equal(is.fn(combineYieldTransforms), true);
@@ -22,6 +22,58 @@ test('combineYieldTransforms always returns a function, returning a Promise', as
   }
 
   assert.end();
+});
+
+/*
+test('combineYieldTransforms throws a correct error if called with non-array', () => {
+  const firstArgTestingFunction = transforms => 
+        expectToFailWith(
+          Promise.attempt(() => combineYieldTransforms(transforms)),
+          `combineYieldTransforms error: ${ JSON.stringify(transforms[0]) } must be a function`
+        );
+
+  const secondArgTestingFunction = transforms => 
+        expectToFailWith(
+          Promise.attempt(() => combineYieldTransforms(transforms)),
+          `combineYieldTransforms error: ${ JSON.stringify(transforms[1]) } is not a function`
+        );
+
+  const tests = [
+    [() => {}, 123], 
+    [() => {}, {}],
+    [() => {}, []], 
+    [() => {}, '']
+  ].map(secondArgTestingFunction);
+
+  return Promise.all([...firstArgTests, ...secondArgTests]);
+});
+*/
+
+test('combineYieldTransforms throws a correct error if called with invalid transforms', () => {
+  const firstArgTestingFunction = transforms => 
+        expectToFailWith(
+          Promise.attempt(() => combineYieldTransforms(transforms)),
+          `combineYieldTransforms error: ${ JSON.stringify(transforms[0]) } is not a function`
+        );
+
+  const secondArgTestingFunction = transforms => 
+        expectToFailWith(
+          Promise.attempt(() => combineYieldTransforms(transforms)),
+          `combineYieldTransforms error: ${ JSON.stringify(transforms[1]) } is not a function`
+        );
+
+  const firstArgTests = [ 
+    [123], [{}], [[]], ['']
+  ].map(firstArgTestingFunction);
+
+  const secondArgTests = [
+    [() => {}, 123], 
+    [() => {}, {}],
+    [() => {}, []], 
+    [() => {}, '']
+  ].map(secondArgTestingFunction);
+
+  return Promise.all([...firstArgTests, ...secondArgTests]);
 });
 
 test('combineYieldTransforms is the identity transform if called without arguments', () => {

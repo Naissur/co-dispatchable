@@ -8,8 +8,14 @@ const wrapInTransformResult = promise =>
   ));
 
 export default function(transforms) {
+  /*
+  if (!is.array(transforms)) {
+    throw error
+  }
+  */
+
   return value => {
-    if ( (!is.array(transforms)) || (transforms.length == 0) ) {
+    if ( (transforms.length == 0) ) {
       return Promise.resolve(value);
     }
 
