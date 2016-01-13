@@ -4,11 +4,13 @@
   "description": "Generator runner with support for custom yield transformations",
   "main": "index.js",
   "scripts": {
-    "compile": "babel --presets es2015 src/ -d lib",
+    "compile": "babel src/ -d lib",
+    "compile:sourcemaps": "babel --source-maps inline src/ -d lib",
     "dev": "npm run test:watch & ./node_modules/.bin/babel -w --presets es2015 src/ -d lib",
     "prepublish": "npm run compile",
     "pretest": "npm run compile",
     "test": "tap 'lib/**/*.spec.js'",
+    "precoverage": "npm run compile:sourcemaps",
     "coverage": "tap --cov 'lib/**/*.spec.js'",
     "test:watch": "nodemon --watch lib -q -x \"tap 'lib/**/*.spec.js'\""
   },
@@ -63,5 +65,10 @@
   "bugs": {
     "url": "https://github.com/Naissur/co-dispatchable/issues"
   },
-  "homepage": "https://github.com/Naissur/co-dispatchable#readme"
+  "homepage": "https://github.com/Naissur/co-dispatchable#readme",
+  "nyc": {
+    "exclude": [
+      "**/*.spec.js"
+    ]
+  }
 }
