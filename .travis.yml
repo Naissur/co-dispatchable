@@ -4,5 +4,5 @@ node_js:
 - "4.0"
 - "0.12"
 - "iojs"
-script: "npm test"
+script: "npm run compile"
 # after_script: "npm install coveralls@2 && cat ./coverage/lcov.info | coveralls"
