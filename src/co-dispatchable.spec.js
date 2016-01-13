@@ -5,7 +5,7 @@ import jsc from 'jsverify';
 import assert from 'assert';
 
 import {expectToFailWith} from './testUtils';
-import test from 'blue-tape';
+import {test} from 'tap';
 import Promise from 'bluebird';
 
 test('run exists', assert => {

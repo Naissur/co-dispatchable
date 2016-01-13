@@ -17,3 +17,4 @@ dist/*
 altbaseConfig.js
 
 lib/
+.nyc_output/

@@ -5,7 +5,7 @@ import combineYieldTransforms from './combineYieldTransforms';
 import jsc from 'jsverify';
 import assert from 'assert';
 import {expectToFailWith} from './testUtils';
-import test from 'blue-tape';
+import {test} from 'tap';
 import Promise from 'bluebird';
 
 test('combineYieldTransforms exports a function by default', assert => {
