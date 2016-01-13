@@ -1,5 +1,5 @@
 # co-dispatchable (WIP)
-![Travis CI](https://travis-ci.org/Naissur/co-dispatchable.svg)
+[![Build Status](https://travis-ci.org/Naissur/co-dispatchable.svg?branch=master)](https://travis-ci.org/Naissur/co-dispatchable)
 
 Generator runner with support for custom yield transformations 
 
