@@ -1,10 +1,6 @@
-
-export function log(){
-  this.history = this.history || [];   // store logs to an array for reference
-  this.history.push(arguments);
-
+export function log(...args){
   if (console){
-    console.log( Array.prototype.slice.call(arguments) );
+    console.log(...args);
   }
 };
 
