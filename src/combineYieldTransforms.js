@@ -8,11 +8,7 @@ const wrapInTransformResult = promise =>
   ));
 
 export default function(transforms) {
-  /*
-  if (!is.array(transforms)) {
-    throw error
-  }
-  */
+  assertArrayOfFunctions(transforms);
 
   return value => {
     if ( (transforms.length == 0) ) {
@@ -37,3 +33,12 @@ export default function(transforms) {
   };
 }
 
+
+function assertArrayOfFunctions(fns) {
+  if (!is.array(fns)) { throw `combineYieldTransforms error: ${ JSON.stringify(fns) } is not an array`; }
+
+  for (let i = 0; i < fns.length; i++) {
+    const fn = fns[i];
+    if (!is.fn(fn)) { throw `combineYieldTransforms error: ${ JSON.stringify(fn) } is not a function` }
+  }
+}

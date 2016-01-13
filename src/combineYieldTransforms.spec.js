@@ -24,30 +24,21 @@ test('combineYieldTransforms always returns a function, returning a Promise', as
   assert.end();
 });
 
-/*
-test('combineYieldTransforms throws a correct error if called with non-array', () => {
-  const firstArgTestingFunction = transforms => 
-        expectToFailWith(
-          Promise.attempt(() => combineYieldTransforms(transforms)),
-          `combineYieldTransforms error: ${ JSON.stringify(transforms[0]) } must be a function`
-        );
 
-  const secondArgTestingFunction = transforms => 
+test('combineYieldTransforms throws a correct error if called with non-array', () => {
+  const test = transforms => 
         expectToFailWith(
           Promise.attempt(() => combineYieldTransforms(transforms)),
-          `combineYieldTransforms error: ${ JSON.stringify(transforms[1]) } is not a function`
+          `combineYieldTransforms error: ${ JSON.stringify(transforms) } is not an array`
         );
 
   const tests = [
-    [() => {}, 123], 
-    [() => {}, {}],
-    [() => {}, []], 
-    [() => {}, '']
-  ].map(secondArgTestingFunction);
+    '', {}, 123, null
+  ].map(test);
 
-  return Promise.all([...firstArgTests, ...secondArgTests]);
+  return Promise.all([...tests]);
 });
-*/
+
 
 test('combineYieldTransforms throws a correct error if called with invalid transforms', () => {
   const firstArgTestingFunction = transforms => 
