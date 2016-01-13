@@ -4,7 +4,10 @@
   "description": "Generator runner with support for custom yield transformations",
   "main": "index.js",
   "scripts": {
+    "clean": "rm -rf lib",
+    "precompile": "npm run clean",
     "compile": "babel src/ -d lib",
+    "precompile:sourcemaps": "npm run clean",
     "compile:sourcemaps": "babel --source-maps inline src/ -d lib",
     "dev": "npm run test:watch & ./node_modules/.bin/babel -w --presets es2015 src/ -d lib",
     "prepublish": "npm run compile",

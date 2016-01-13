@@ -1,5 +1,6 @@
 import is from 'is';
 import Promise from 'bluebird';
+import {isPromise, isGeneratorFunction} from '../utils';
 
 export default function run(generatorFunc, transformYield = (x => x)) {
   if (!isGeneratorFunction(generatorFunc)) {
@@ -33,18 +34,3 @@ export default function run(generatorFunc, transformYield = (x => x)) {
 }
 
 
-function isPromise(x) {
-  return (typeof x !== 'undefined') && (x !== null) && ('function' == typeof (x || {}).then);
-}
-
-function isGenerator(x) {
-  return 'function' == typeof x.next && 'function' == typeof x.throw;
-}
-
-function isGeneratorFunction(x) {
-  if (!is.defined(x)) return false;
-  const constructor = x.constructor;
-  if (!constructor) return false;
-  if ('GeneratorFunction' === constructor.name || 'GeneratorFunction' === constructor.displayName) return true;
-  return isGenerator(constructor.prototype);
-}

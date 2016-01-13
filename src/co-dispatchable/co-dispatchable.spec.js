@@ -4,7 +4,7 @@ import is from 'is';
 import jsc from 'jsverify';
 import assert from 'assert';
 
-import {expectToFailWith} from './testUtils';
+import {expectToFailWith} from '../test-utils';
 import {test} from 'tap';
 import Promise from 'bluebird';
 

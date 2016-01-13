@@ -1,5 +1,5 @@
 import {test} from 'tap';
-import {expectToFail, expectToFailWith} from './testUtils';
+import {expectToFail, expectToFailWith} from './test-utils';
 import Promise from 'bluebird';
 import assert from 'assert';
 import jsc from 'jsverify';

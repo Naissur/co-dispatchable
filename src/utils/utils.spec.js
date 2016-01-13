@@ -1,6 +1,8 @@
+require('babel-polyfill');
+
 import {test} from 'tap';
 import jsc from 'jsverify';
-import {log, isPromise} from './utils';
+import {log, isPromise, isGenerator, isGeneratorFunction} from './utils';
 import bluebirdPromise from 'bluebird';
 
 test('log invokes console.log with the passed arguments', assert => {
@@ -38,3 +40,38 @@ test(`isPromise returns true on bluebird and native (if they are defined) Promis
 
   assert.end();
 });
+
+
+test(`isGenerator returns false on non-Generator's`, assert => {
+  [ 
+    123, {}, [], '', undefined, null, () => {}, (function* () {})
+  ].forEach(arg => {
+    assert.equal(isGenerator(arg), false, 'returns false');
+  });
+
+  assert.end();
+});
+
+test(`isGenerator returns true on Generator's`, assert => {
+  assert.equal(isGenerator( (function* () {})() ), true, 'returns true');
+
+  assert.end();
+});
+
+
+test(`isGeneratorFunction returns false on non-GeneratorFunction's`, assert => {
+  [ 
+    123, {}, [], '', undefined, null, () => {}
+  ].forEach(arg => {
+    assert.equal(isGenerator(arg), false, 'returns false');
+  });
+
+  assert.end();
+});
+
+test(`isGeneratorFunction returns true on GeneratorFunction's`, assert => {
+  assert.equal( isGeneratorFunction(function* () {}) , true, 'returns true');
+
+  assert.end();
+});
+

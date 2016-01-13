@@ -1,7 +1,7 @@
 import jsc from 'jsverify';
 import _ from 'ramda';
 import is from 'is';
-import {isPromise} from './utils';
+import {isPromise} from '../utils';
 
 export const arbitaryLetter = 
   jsc.oneof( 'abcdefhgijklmnopqrstuvwxyz'.split('').map(c => jsc.constant(c)));

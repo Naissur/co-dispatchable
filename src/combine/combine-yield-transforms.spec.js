@@ -1,10 +1,10 @@
 require('babel-polyfill');
 import is from 'is';
-import combineYieldTransforms from './combineYieldTransforms';
+import combineYieldTransforms from './combine-yield-transforms';
 
 import jsc from 'jsverify';
 import assert from 'assert';
-import {expectToFailWith} from './testUtils';
+import {expectToFailWith} from '../test-utils';
 import {test} from 'tap';
 import Promise from 'bluebird';
 
