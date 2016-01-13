@@ -63,4 +63,15 @@ Making this change enables **testing the generator control flow synchronously, w
 
 The side-effects of `get`, `logInfo`, `logError` and their runners are tested separately.
 
+# API
 
+#### run(generatorFunc: GeneratorFunction [, transformYield: a -> b | Promise b] ) : Promise
+
+Runs the generator, resuming it with the transformed `yield` values (either synchronously, or asynchronously).
+
+
+#### combineYieldTransforms(transforms: [a -> b | Promise b]) : a -> Promise b
+
+A helper function for combining the yield transforms.
+
+It returns a transform function which, when tested against some yield, calls all of the transforms and returns the Promise resolving with the value returned by the first (by order) successful one (either returned a value synchronously or resolved asynchronously). If all of the transforms fail, it rejects the promise.
