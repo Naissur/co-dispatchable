@@ -1,4 +1,6 @@
 # co-dispatchable (WIP)
+![Travis CI](https://travis-ci.org/Naissur/co-dispatchable.svg)
+
 Generator runner with support for custom yield transformations 
 
 # Why another co/bluebird.coroutine ?
