@@ -2,6 +2,7 @@ require('babel-polyfill');
 import {test} from 'tap';
 import is from 'is';
 import coHandler from './co-handler';
+import run from '..';
 import jsc from 'jsverify';
 import Promise from 'bluebird';
 import assert from 'assert';
@@ -70,10 +71,10 @@ test(`co-handler runs the generator function with run() if it is passed`, () => 
   );
 
   return Promise.all([
-    [ function* (){ yield 'test'}, 'test' ],
+    [ function* (){ return 'test'}, 'test' ],
     [ function* (){
       let val = (yield 1) + 1;
-      yield Promise.resolve(val + 1);
+      return Promise.resolve(val + 1);
     }, 3 ]
   ].map(testingFunction));
 });
@@ -96,5 +97,20 @@ test(`co-handler resovles with identity on other types, and plain arrays and obj
 });
 
 
+test(`co-handler with run() allows generator to try/catch promise errors`, () => {
+  const TEST_ERROR = 'boom';
 
+  return run(function* (){
+    try {
+      yield Promise.reject(TEST_ERROR);
+    } catch (err) {
+      assert.deepEqual(TEST_ERROR, err);
+      return true;
+    }
+    return false;
+  }, coHandler)
+    .then(x => {
+      assert.equal(x, true);
+    });
+});
 

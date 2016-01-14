@@ -14,22 +14,43 @@ export default function run(generatorFunc, transformYield = (x => x)) {
   return new Promise(
     (resolve, reject) => {
       const it = generatorFunc();
-      let ret;
+      onFulfill(it);
 
-      (function iterate(val){
-        ret = it.next(val);
-        const resumeWith = transformYield(ret.value);
+      function onFulfill(val){
+        let ret;
 
+        try {
+          ret = it.next(val);
+        } catch (e) {
+          return reject(`run: an unhandled error was thrown by the generator: ${e}`);
+        }
+        next(ret);
+      }
+
+      function onReject(err){
+        let ret;
+
+        try {
+          ret = it.throw(err);
+        } catch (e) {
+          return reject(`run: an unhandled error was thrown by the generator: ${e}`);
+        }
+
+        next(ret);
+      }
+
+      function next(ret) {
+        const transformedValue = transformYield(ret.value);
         if (!ret.done) {
-          if (isPromise(resumeWith)) {
-            resumeWith.then( iterate, reject );
+          if (isPromise(transformedValue)) {
+            transformedValue.then( onFulfill, onReject );
           } else {
-            setTimeout( () => { iterate(resumeWith) }, 0);
+            setTimeout( () => { onFulfill(transformedValue) }, 0);
           }
         } else {
-          resolve(val);
+          resolve(transformedValue);
         }
-      })();
+      }
     });
 }
 

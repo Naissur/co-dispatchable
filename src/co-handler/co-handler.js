@@ -4,12 +4,16 @@ import {isPromise} from '../utils';
 import combineYieldTransforms from '../combine';
 import runCo from '../co-dispatchable';
 
-export default combineYieldTransforms([
-  runCo,
-  arrayToPromise,
-  objectToPromise,
-  x => x
-]);
+export default val => {
+  if (isPromise(val)) { return val; }
+
+  return combineYieldTransforms([
+    runCo,
+    arrayToPromise,
+    objectToPromise,
+    x => x
+  ])(val);
+};
 
 function arrayToPromise(arr) {
   if (!is.array) throw 'not an array';

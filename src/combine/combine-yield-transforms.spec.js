@@ -99,23 +99,20 @@ test('combineYieldTransforms handles single identity transform', () => {
   return jsc.assert(tests, {tests: 20});
 });
 
-test('combineYieldTransforms takes the first returned value when passed synchronous transforms, if all of them were resolved', () => {
-  const firstTransform = x => {
-    if (x === 1) return 2;
-  };
-  const secondTransform = x => {
-    if (x === 2) return 3;
-  };
+test('combineYieldTransforms handles transformations which resolve with promises, which later get rejected', () => {
+  const TEST_ERROR = 'test error';
+  const transform = () => (
+    Promise.resolve(() => Promise.reject(TEST_ERROR))
+  );
 
-  const combination = combineYieldTransforms([firstTransform, secondTransform]);
-
-  return Promise.all([
-    combination(1),
-    combination(2)
-  ]).then( ([first, second]) => {
-    assert.equal(first, 2);
-    assert.equal(is.defined(second), false);
-  });
+  return combineYieldTransforms([transform])()
+        .then(
+          getValue => getValue(),
+          () => {throw 'expected outer to pass'}
+        ).then(
+          () => {throw 'expected inner to fail'},
+          x => { assert.equal(x, TEST_ERROR); }
+        );
 });
 
 
