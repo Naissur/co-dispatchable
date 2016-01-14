@@ -13,6 +13,7 @@ test('combineYieldTransforms exports a function by default', t => {
   t.end();
 });
 
+
 test('combineYieldTransforms always returns a function, returning a Promise', t => {
   const result = combineYieldTransforms([])();
   if (is.defined(result.then)) {
@@ -67,6 +68,7 @@ test('combineYieldTransforms throws a correct error if called with invalid trans
   return Promise.all([...firstArgTests, ...secondArgTests]);
 });
 
+
 test('combineYieldTransforms is the identity transform if called without arguments', () => {
   const result = combineYieldTransforms([]);
 
@@ -82,6 +84,9 @@ test('combineYieldTransforms is the identity transform if called without argumen
 
   return jsc.assert(tests, {tests: 20});
 });
+
+
+
 
 test('combineYieldTransforms handles single identity transform', () => {
   const combine = combineYieldTransforms([x => x]);
@@ -99,6 +104,24 @@ test('combineYieldTransforms handles single identity transform', () => {
   return jsc.assert(tests, {tests: 20});
 });
 
+
+test('combineYieldTransforms handles single promise-based identity transform', () => {
+  const combine = combineYieldTransforms([x => Promise.resolve(() => x)]);
+
+  const tests = jsc.forall(
+    'json',
+    testValue => (
+      combine(testValue).then(
+        value => assert.equal(value, testValue)
+      )
+      .then(() => true)
+    )
+  );
+
+  return jsc.assert(tests, {tests: 20});
+});
+
+
 test('combineYieldTransforms handles transformations which resolve with promises, which later get rejected', () => {
   const TEST_ERROR = 'test error';
   const transform = () => (
@@ -106,23 +129,16 @@ test('combineYieldTransforms handles transformations which resolve with promises
   );
 
   return combineYieldTransforms([transform])()
-        .then(
-          getValue => getValue(),
-          () => {throw 'expected outer to pass'}
-        ).then(
-          () => {throw 'expected inner to fail'},
-          x => { assert.equal(x, TEST_ERROR); }
-        );
+          .then(
+            () => {throw 'expected to be rejected'},
+            x => { assert.equal(x, TEST_ERROR); }
+          );
 });
 
 
 test('combineYieldTransforms returns a rejected promise with the correct error if all transforms were rejected', () => {
-  const firstTransform = () => {
-    throw 'error';
-  };
-  const secondTransform = () => {
-    throw 'error';
-  };
+  const firstTransform = () => { throw 'error'; };
+  const secondTransform = () => { throw 'error'; };
 
   const combination = combineYieldTransforms([firstTransform, secondTransform]);
 
@@ -133,6 +149,7 @@ test('combineYieldTransforms returns a rejected promise with the correct error i
           assert.equal(error, 'combineYieldTransforms error: none of the transforms resolved');
         });
 });
+
 
 test('combineYieldTransforms takes the first (by order) resolved transform when passed synchronous transforms', () => {
   const firstTransform = x => {
@@ -157,6 +174,7 @@ test('combineYieldTransforms takes the first (by order) resolved transform when 
     return true;
   });
 });
+
 
 
 test('combineYieldTransforms handles the mixed type transforms', () => {

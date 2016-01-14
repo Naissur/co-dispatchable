@@ -1,11 +1,23 @@
 import is from 'is';
+import {isPromise} from '../utils';
 import Promise from 'bluebird';
 
-const wrapInTransformResult = promise => 
-  (promise.then(
-    val => ({ success: true,  value: val }),
-    err => ({ success: false, value: err })
-  ));
+const wrapInTransformResult = getTransformedValue => {
+  try {
+    const transformed = getTransformedValue();
+
+    if (isPromise(transformed)) {
+      return (transformed.then(
+        getValue => ({ success: true,  value: getValue() }),
+        err => ({ success: false, value: err })
+      ));
+    }
+
+    return { success: true, value: transformed };
+  } catch (e) {
+    return { success: false };
+  }
+}
 
 export default function(transforms) {
   assertArrayOfFunctions(transforms);
@@ -16,7 +28,7 @@ export default function(transforms) {
     }
 
     const transformPromises = transforms.map(
-      transform => ( wrapInTransformResult(Promise.attempt(() => transform(value))) ) //wraping is needed for running Promise.all()
+      transform => ( wrapInTransformResult(() => transform(value)) ) //wraping is needed for running Promise.all()
     );
 
     return Promise.all(transformPromises)

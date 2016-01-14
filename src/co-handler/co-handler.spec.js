@@ -3,7 +3,6 @@ import {test} from 'tap';
 import is from 'is';
 import coHandler from './co-handler';
 import run from '..';
-import jsc from 'jsverify';
 import Promise from 'bluebird';
 import assert from 'assert';
 
@@ -15,20 +14,14 @@ test('co-handler is a yield handler', t => {
 
 
 test('co-handler returns a Promise.all call result if called with an array of promises', () => {
-  const tests = jsc.forall(
-    jsc.nearray(jsc.json),
-    expected => {
-      const promises = expected.map(Promise.resolve);
+  const testValues = [ 1, 2 ];
+  const testPromises = testValues.map(Promise.resolve);
 
-      return coHandler(promises)
-        .then(results => {
-          assert.deepEqual(results, expected, 'co-handler result is equal to the initial array');
-          return true;
-        })
-    }
-  );
-
-  return jsc.assert(tests, {tests: 20});
+  return coHandler(testPromises)
+    .then(results => {
+      assert.deepEqual(results, testValues, 'co-handler result is equal to the initial array');
+      return true;
+    })
 });
 
 
@@ -49,6 +42,26 @@ test(`co-handler maps the values and resolves the promises in the array`, () => 
 });
 
 
+
+
+test(`co-handler returns a promise which gets rejected if one of the promises in the array were rejected`, () => {
+  const testingFunction = ([arg, expected]) => (
+    coHandler(arg)
+      .then(
+        () => { throw 'expected to fail' },
+        result => assert.deepEqual(result, expected, 'expect returned and passed values to match')
+      )
+  );
+
+  return Promise.all([
+    [ [1, Promise.reject(2)], 2 ],
+    [ [Promise.reject(1), Promise.resolve(2), ''], 1 ],
+    [ [Promise.resolve(1), 'test', Promise.reject('test')], 'test']
+  ].map(testingFunction));
+});
+
+
+
 test(`co-handler maps the values and resolves the promises in an object`, () => {
   const testingFunction = ([arg, expected]) => (
     coHandler(arg)
@@ -62,6 +75,7 @@ test(`co-handler maps the values and resolves the promises in an object`, () => 
     [ {}, {} ]
   ].map(testingFunction));
 });
+
 
 
 test(`co-handler runs the generator function with run() if it is passed`, () => {

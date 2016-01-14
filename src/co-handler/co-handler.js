@@ -2,25 +2,29 @@ import Promise from 'bluebird';
 import is from 'is';
 import {isPromise} from '../utils';
 import combineYieldTransforms from '../combine';
+import {isGeneratorFunction} from '../utils';
 import runCo from '../co-dispatchable';
 
-export default val => {
-  if (isPromise(val)) { return val; }
+export default combineYieldTransforms([
+  wrapPromiseValue,
+  generatorFunctionToPromise,
+  arrayToPromise,
+  objectToPromise,
+  x => x
+]);
 
-  return combineYieldTransforms([
-    runCo,
-    arrayToPromise,
-    objectToPromise,
-    x => x
-  ])(val);
-};
+function wrapPromiseValue(x) {
+  if (!isPromise(x)) throw 'not a promise';
+  
+  return Promise.resolve( () => x );
+}
 
 function arrayToPromise(arr) {
-  if (!is.array) throw 'not an array';
+  if (!is.array(arr)) throw 'not an array';
 
-  return Promise.all(arr.map(
-    val => isPromise(val) ? Promise.resolve(val) : val
-  ));
+  return Promise.resolve(() => 
+    Promise.all(arr)
+  );
 }
 
 function objectToPromise(obj) {
@@ -38,9 +42,9 @@ function objectToPromise(obj) {
       results[key] = obj[key];
     }
   }
-  return Promise.all(promises).then(function () {
-    return results;
-  });
+  return Promise.resolve(() => 
+    (Promise.all(promises).then(() => results))
+  );
 
   function defer(promiseToDefer, promiseKey) {
     // predefine the key in the result
@@ -51,6 +55,13 @@ function objectToPromise(obj) {
   }
 }
 
+function generatorFunctionToPromise(x) {
+  if (!isGeneratorFunction(x)) throw 'not a generator function';
+
+  return Promise.resolve(() => 
+    runCo(x)
+  );
+}
 
 const isObject = val =>  (
   Object == val.constructor
