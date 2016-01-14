@@ -85,8 +85,29 @@ If none were matched, the value remains unchanged.
 Runs the generator, resuming it with the transformed `yield` values (either synchronously, or asynchronously). Can be used with the co-handler.
 
 
-#### combineYieldTransforms(transforms: [a -> b | Promise b]) : a -> Promise b
+#### combineYieldTransforms(transforms: [a -> b | Promise (() -> b)]) : a -> Promise b
 
 A helper function for combining the yield transforms.
 
 It returns a transform function which, when tested against some yield, calls all of the transforms and returns the Promise resolving with the value returned by the first (by order) successful one (either returned a value synchronously or resolved asynchronously). If all of the transforms fail, it rejects the promise.
+
+**Note**: if the transform function returns a promise, it must resolve or reject with the value, wrapped into a function. This is needed to prevent promise flattening, for example in
+
+```javascript
+const recognizePromise = x => {
+  if (!isPromise(x)) throw 'not a promise';
+  return Promise.resolve(x);
+}
+const result = combineYieldTransforms([ recognizePromise ])(Promise.reject('recognised а promise, but it got rejected'));
+```
+the transform function is expected to *resolve with a rejected promise*, but, due to the promises getting flattened, instead it returns a rejected promise, and combineYieldTransforms throws an error as none of the transforms were resolved. 
+
+To prevent this behavior, the promise-based transforming functions **must** return a promise which resolves with a value wraped into a function:
+
+```javascript
+const recognizePromise = x => {
+  if (!isPromise(x)) throw 'not a promise';
+  return Promise.resolve( () => x );
+}
+```
+
