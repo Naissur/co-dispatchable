@@ -63,7 +63,7 @@ test(`co-handler maps the values and resolves the promises in an object`, () => 
 });
 
 
-test(`co-handler runs the generator with run() if it is passed`, () => {
+test(`co-handler runs the generator function with run() if it is passed`, () => {
   const testingFunction = ([arg, expected]) => (
     coHandler(arg)
       .then( result => assert.deepEqual(result, expected, 'expect returned and passed values to match') )
@@ -72,7 +72,7 @@ test(`co-handler runs the generator with run() if it is passed`, () => {
   return Promise.all([
     [ function* (){ yield 'test'}, 'test' ],
     [ function* (){
-      const val = (yield 1) + 1;
+      let val = (yield 1) + 1;
       yield Promise.resolve(val + 1);
     }, 3 ]
   ].map(testingFunction));
