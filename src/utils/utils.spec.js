@@ -6,7 +6,7 @@ import {log, isPromise, isGenerator, isGeneratorFunction} from './utils';
 import bluebirdPromise from 'bluebird';
 
 test('log invokes console.log with the passed arguments', assert => {
-  const test = args => {
+  const testingFunction = args => {
     global.console.log = (...calledWith) => {
       assert.deepEqual(calledWith, args, 'called with the wrong args');
     }
@@ -15,7 +15,7 @@ test('log invokes console.log with the passed arguments', assert => {
   };
 
   const tests = jsc.forall(
-    '[json]', args => test(args)
+    '[json]', args => testingFunction(args)
   );
 
   jsc.assert(tests, {tests: 20});

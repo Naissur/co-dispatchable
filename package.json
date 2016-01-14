@@ -15,7 +15,8 @@
     "test": "tap 'lib/**/*.spec.js'",
     "precoverage": "npm run compile:sourcemaps",
     "coverage": "tap --cov 'lib/**/*.spec.js'",
-    "test:watch": "nodemon --watch lib -q -x \"tap 'lib/**/*.spec.js'\""
+    "test:watch": "nodemon --watch lib -q -x \"tap 'lib/**/*.spec.js'\"",
+    "lint" : "eslint -c .eslintrc src/**"
   },
   "author": "Naissur <vlad.aituganov@gmail.com>",
   "license": "ISC",

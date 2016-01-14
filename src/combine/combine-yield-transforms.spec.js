@@ -8,25 +8,25 @@ import {expectToFailWith} from '../test-utils';
 import {test} from 'tap';
 import Promise from 'bluebird';
 
-test('combineYieldTransforms exports a function by default', assert => {
-  assert.equal(is.fn(combineYieldTransforms), true);
-  assert.end();
+test('combineYieldTransforms exports a function by default', t => {
+  t.equal(is.fn(combineYieldTransforms), true);
+  t.end();
 });
 
-test('combineYieldTransforms always returns a function, returning a Promise', assert => {
+test('combineYieldTransforms always returns a function, returning a Promise', t => {
   const result = combineYieldTransforms([])();
   if (is.defined(result.then)) {
-    assert.pass();
+    t.pass();
   } else {
-    assert.fail();
+    t.fail();
   }
 
-  assert.end();
+  t.end();
 });
 
 
 test('combineYieldTransforms throws a correct error if called with non-array', () => {
-  const test = transforms => 
+  const testingFunction = transforms => 
         expectToFailWith(
           Promise.attempt(() => combineYieldTransforms(transforms)),
           `combineYieldTransforms error: ${ JSON.stringify(transforms) } is not an array`
@@ -34,7 +34,7 @@ test('combineYieldTransforms throws a correct error if called with non-array', (
 
   const tests = [
     '', {}, 123, null
-  ].map(test);
+  ].map(testingFunction);
 
   return Promise.all([...tests]);
 });
@@ -72,9 +72,9 @@ test('combineYieldTransforms is the identity transform if called without argumen
 
   const tests = jsc.forall(
     'json',
-    test => (
-      result(test).then(
-        value => assert.equal(value, test)
+    testValue => (
+      result(testValue).then(
+        value => assert.equal(value, testValue)
       )
       .then(() => true)
     )
@@ -83,14 +83,14 @@ test('combineYieldTransforms is the identity transform if called without argumen
   return jsc.assert(tests, {tests: 20});
 });
 
-test('combineYieldTransforms handles single identity transform', assert => {
+test('combineYieldTransforms handles single identity transform', () => {
   const combine = combineYieldTransforms([x => x]);
 
   const tests = jsc.forall(
     'json',
-    test => (
-      combine(test).then(
-        value => assert.equal(value, test)
+    testValue => (
+      combine(testValue).then(
+        value => assert.equal(value, testValue)
       )
       .then(() => true)
     )

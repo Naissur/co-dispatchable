@@ -5,7 +5,7 @@ import assert from 'assert';
 import jsc from 'jsverify';
 
 test('expectToFail throws correct error if the first argument is not a promise', () => {
-  const test = promise => 
+  const testingFunction = promise => 
           Promise.attempt(() => expectToFail(promise))
           .then( () => {
             throw 'Expected to fail';
@@ -17,7 +17,7 @@ test('expectToFail throws correct error if the first argument is not a promise',
 
   const tests = [ 
     123, {}, [], '', () => {}
-  ].map(test);
+  ].map(testingFunction);
 
   return Promise.all(tests);
 });
@@ -62,7 +62,7 @@ test('expectToFail succeeds if the passed promise gets rejected', () => {
 
 
 test('expectToFailWith fails with the correct error if the first argument is not a promise', () => {
-  const test = promise => 
+  const testingFunction = promise => 
           Promise.attempt(() => expectToFailWith(promise))
           .then( () => {
             throw 'Expected to fail';
@@ -73,7 +73,7 @@ test('expectToFailWith fails with the correct error if the first argument is not
         
   const tests = [ 
     123, {}, [], '', () => {}
-  ].map(test);
+  ].map(testingFunction);
 
   return Promise.all(tests);
 });

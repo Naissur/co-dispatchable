@@ -38,11 +38,11 @@ function objectToPromise(obj) {
     return results;
   });
 
-  function defer(promise, key) {
+  function defer(promiseToDefer, promiseKey) {
     // predefine the key in the result
-    results[key] = undefined;
-    promises.push(promise.then(function (res) {
-      results[key] = res;
+    results[promiseKey] = undefined;
+    promises.push(promiseToDefer.then(function (res) {
+      results[promiseKey] = res;
     }));
   }
 }

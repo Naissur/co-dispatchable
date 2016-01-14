@@ -16,11 +16,13 @@
     "block-scoped-var": 0,
     "padded-blocks": 0,
     "no-console": 0,
+    "no-shadow": 2,
     "no-process-exit": 0,
     "id-length": 0,
     "no-new": 0,
     "no-undef": 2,
     "no-unused-vars": 2,
+    "no-redeclare": 2,
     "camelcase": [2, {"properties": "always"}],
 
     "babel/generator-star-spacing": [2, "after"],
