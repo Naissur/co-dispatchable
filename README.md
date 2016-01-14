@@ -66,11 +66,23 @@ Making this change enables **testing the generator control flow synchronously, w
 
 The side-effects of `get`, `logInfo`, `logError` and their runners are tested separately.
 
+# Default handler
+
+A default yield handler (`co-dispatchable/co-handler`) is provided (much like `co`'s), which handles:
+
+- **promises**
+- **arrays with promise values** - substitutes the promises for the values they resolved with
+- **objects with promise values** - the same way as with arrays
+- **generator functions** - `run`s the generator, and resumes the root generator with the returned value
+
+If none were matched, the value remains unchanged.
+
+
 # API
 
 #### run(generatorFunc: GeneratorFunction [, transformYield: a -> b | Promise b] ) : Promise
 
-Runs the generator, resuming it with the transformed `yield` values (either synchronously, or asynchronously).
+Runs the generator, resuming it with the transformed `yield` values (either synchronously, or asynchronously). Can be used with the co-handler.
 
 
 #### combineYieldTransforms(transforms: [a -> b | Promise b]) : a -> Promise b
