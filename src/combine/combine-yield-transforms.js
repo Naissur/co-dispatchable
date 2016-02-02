@@ -37,7 +37,7 @@ export default function(transforms) {
                                               .map(result => result.value);
 
         if (successfulResultValues.length === 0) {
-          throw 'combineYieldTransforms error: none of the transforms resolved';
+          throw new Error('combineYieldTransforms error: none of the transforms resolved');
         }
 
         return successfulResultValues[0];
@@ -47,10 +47,10 @@ export default function(transforms) {
 
 
 function assertArrayOfFunctions(fns) {
-  if (!is.array(fns)) { throw `combineYieldTransforms error: ${ JSON.stringify(fns) } is not an array`; }
+  if (!is.array(fns)) { throw new Error(`combineYieldTransforms error: ${ JSON.stringify(fns) } is not an array`); }
 
   for (let i = 0; i < fns.length; i++) {
     const fn = fns[i];
-    if (!is.fn(fn)) { throw `combineYieldTransforms error: ${ JSON.stringify(fn) } is not a function` }
+    if (!is.fn(fn)) { throw new Error(`combineYieldTransforms error: ${ JSON.stringify(fn) } is not a function`); }
   }
 }

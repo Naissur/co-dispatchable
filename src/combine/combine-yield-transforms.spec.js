@@ -142,12 +142,10 @@ test('combineYieldTransforms returns a rejected promise with the correct error i
 
   const combination = combineYieldTransforms([firstTransform, secondTransform]);
 
-  return combination('test')
-        .then( () => {
-          throw 'Expected to fail';
-        }, error => {
-          assert.equal(error, 'combineYieldTransforms error: none of the transforms resolved');
-        });
+  return expectToFailWith(
+          Promise.attempt(() => combination('test')),
+          'combineYieldTransforms error: none of the transforms resolved'
+        );
 });
 
 

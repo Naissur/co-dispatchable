@@ -4,11 +4,11 @@ import {isPromise, isGeneratorFunction} from '../utils';
 
 export default function run(generatorFunc, transformYield = (x => x)) {
   if (!isGeneratorFunction(generatorFunc)) {
-    throw `run: ${ JSON.stringify(generatorFunc) } is not a valid generator function`;
+    throw new Error(`run: ${ JSON.stringify(generatorFunc) } is not a valid generator function`);
   }
 
   if (!is.fn(transformYield)) {
-    throw `run: ${ JSON.stringify(transformYield) } is not a valid function`;
+    throw new Error(`run: ${ JSON.stringify(transformYield) } is not a valid function`);
   }
 
   return new Promise(

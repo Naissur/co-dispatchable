@@ -14,13 +14,13 @@ export default combineYieldTransforms([
 ]);
 
 function wrapPromiseValue(x) {
-  if (!isPromise(x)) throw 'not a promise';
+  if (!isPromise(x)) throw new Error('not a promise');
   
   return Promise.resolve( () => x );
 }
 
 function arrayToPromise(arr) {
-  if (!is.array(arr)) throw 'not an array';
+  if (!is.array(arr)) throw new Error('not an array');
 
   return Promise.resolve(() => 
     Promise.all(arr)
@@ -28,7 +28,7 @@ function arrayToPromise(arr) {
 }
 
 function objectToPromise(obj) {
-  if (!isObject(obj)) throw 'not an object';
+  if (!isObject(obj)) throw new Error('not an object');
 
   var results = new obj.constructor();
   var keys = Object.keys(obj);
@@ -56,7 +56,7 @@ function objectToPromise(obj) {
 }
 
 function generatorFunctionToPromise(x) {
-  if (!isGeneratorFunction(x)) throw 'not a generator function';
+  if (!isGeneratorFunction(x)) throw new Error('not a generator function');
 
   return Promise.resolve(() => 
     runCo(x)

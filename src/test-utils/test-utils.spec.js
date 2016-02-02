@@ -8,9 +8,9 @@ test('expectToFail throws correct error if the first argument is not a promise',
   const testingFunction = promise => 
           Promise.attempt(() => expectToFail(promise))
           .then( () => {
-            throw 'Expected to fail';
-          }, reason => {
-            assert.equal(reason, `expectToFail: ${JSON.stringify(promise)} is not a Promise`);
+            throw new Error('Expected to fail');
+          }, ({message}) => {
+            assert.equal(message, `expectToFail: ${JSON.stringify(promise)} is not a Promise`);
             return true;
           });
         
@@ -25,10 +25,10 @@ test('expectToFail throws correct error if the first argument is not a promise',
 test('expectToFail fails if the promise resolves (w/o descriptor)', () => {
   return expectToFail(Promise.resolve())
         .then( () => {
-          throw 'expected to fail';
+          throw new Error('expected to fail');
         },
-        reason => {
-          assert.equal(reason, `Expected to fail`);
+        ({message}) => {
+          assert.equal(message, `Expected to fail`);
         }
       );
 });
@@ -37,9 +37,9 @@ test('expectToFail fails with correct description if the promise resolves', () =
   const tests = jsc.forall(
     'asciinestring', descriptor => (
       expectToFail(Promise.resolve(), descriptor)
-          .then(() => { throw 'expected to fail'; },
-                reason => { 
-                  assert.equal(reason, `Expected to fail on ${descriptor}`);
+          .then(() => { throw new Error('expected to fail'); },
+                ({message}) => { 
+                  assert.equal(message, `Expected to fail on ${descriptor}`);
                   return true; 
                 }
           )
@@ -53,7 +53,7 @@ test('expectToFail succeeds if the passed promise gets rejected', () => {
   return expectToFail(Promise.reject())
           .then( 
             () => true,
-            () => { throw 'expected to fail'; }
+            () => { throw new Error('expected to fail'); }
           );
 });
 
@@ -65,9 +65,9 @@ test('expectToFailWith fails with the correct error if the first argument is not
   const testingFunction = promise => 
           Promise.attempt(() => expectToFailWith(promise))
           .then( () => {
-            throw 'Expected to fail';
-          }, reason => {
-            assert.equal(reason, `expectToFailWith: ${JSON.stringify(promise)} is not a Promise`);
+            throw new Error('Expected to fail');
+          }, ({message}) => {
+            assert.equal(message, `expectToFailWith: ${JSON.stringify(promise)} is not a Promise`);
             return true;
           });
         
@@ -84,10 +84,10 @@ test('expectToFailWith fails with the correct error if the promise resolves', ()
    'asciinestring', expectedError => 
         expectToFailWith(Promise.resolve(), expectedError)
         .then( () => {
-          throw 'expected to fail';
+          throw new Error('expected to fail');
         },
-        reason => {
-          assert.equal(reason, `Expected to fail with ${ expectedError }, instead passed`);
+        ({message}) => {
+          assert.equal(message, `Expected to fail with ${ expectedError }, instead passed`);
           return true;
         }
       )
@@ -99,12 +99,12 @@ test('expectToFailWith fails with the correct error if the promise resolves', ()
 test('expectToFailWith fails with the correct error if the promise rejects with a different error', () => {
   const tests = jsc.forall(
    'asciinestring', expectedError => 
-        expectToFailWith(Promise.reject(`${expectedError}_`), expectedError)
+        expectToFailWith(Promise.reject(new Error(`${expectedError}_`)), expectedError)
         .then( () => {
-          throw 'expected to fail';
+          throw new Error('expected to fail');
         },
-        reason => {
-          assert.equal(reason, `Expected to fail with ${ expectedError }, instead got ${ expectedError+'_' }`);
+        ({message}) => {
+          assert.equal(message, `Expected to fail with ${ expectedError }, instead got ${ expectedError+'_' }`);
           return true;
         }
       )
@@ -117,9 +117,9 @@ test('expectToFailWith fails with the correct error if the promise rejects with 
 test('expectToFail succeeds if the promise resolves with correct description', () => {
   const tests = jsc.forall(
    'asciinestring', expectedError => 
-        expectToFailWith(Promise.reject(expectedError), expectedError)
+        expectToFailWith(Promise.reject(new Error(expectedError)), expectedError)
           .then( () => { return true; },
-          () => { throw 'expected to pass'; }
+          () => { throw new Error('expected to pass'); }
       )
   );
 
