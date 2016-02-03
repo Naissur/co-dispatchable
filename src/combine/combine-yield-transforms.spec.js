@@ -1,12 +1,19 @@
 require('babel-polyfill');
 import is from 'is';
 import combineYieldTransforms from './combine-yield-transforms';
+import {has} from 'ramda';
 
-import jsc from 'jsverify';
-import assert from 'assert';
+// import jsc from 'jsverify';
 import {expectToFailWith} from '../test-utils';
 import {test} from 'tap';
 import Promise from 'bluebird';
+
+
+
+// =================================//
+// =     transforms of depth 1    = //
+// =================================//
+
 
 test('combineYieldTransforms exports a function by default', t => {
   t.equal(is.fn(combineYieldTransforms), true);
@@ -14,13 +21,11 @@ test('combineYieldTransforms exports a function by default', t => {
 });
 
 
-test('combineYieldTransforms always returns a function, returning a Promise', t => {
-  const result = combineYieldTransforms([])();
-  if (is.defined(result.then)) {
-    t.pass();
-  } else {
-    t.fail();
-  }
+test('combineYieldTransforms returns a function, returning an object with shape {success: Bool, result: *}', t => {
+  const combineResult = combineYieldTransforms([])();
+
+  t.assert(is.bool(combineResult.success), `has .success, which is boolean, got ${JSON.stringify(combineResult)}`);
+  t.assert(has('value', combineResult), `has .value, got ${JSON.stringify(combineResult)}`);
 
   t.end();
 });
@@ -69,137 +74,136 @@ test('combineYieldTransforms throws a correct error if called with invalid trans
 });
 
 
-test('combineYieldTransforms is the identity transform if called without arguments', () => {
-  const result = combineYieldTransforms([]);
 
-  const tests = jsc.forall(
-    'json',
-    testValue => (
-      result(testValue).then(
-        value => assert.equal(value, testValue)
-      )
-      .then(() => true)
-    )
-  );
+test('combineYieldTransforms is the identity transform if called without arguments', t => {
+  const transform = combineYieldTransforms([]);
+  const TEST_VALUE = {test: 'test', anotherTest: 'anotherTest'};
 
-  return jsc.assert(tests, {tests: 20});
+  const got = transform(TEST_VALUE);
+  const expected = {success: true, value: TEST_VALUE};
+
+  t.deepEqual(got, expected);
+  t.end();
 });
 
 
 
+test('combineYieldTransforms handles single identity transform', t => {
+  const transform = combineYieldTransforms([x => ({success: true, value: x})]);
+  const TEST_VALUE = {test: 'test', anotherTest: 'anotherTest'};
 
-test('combineYieldTransforms handles single identity transform', () => {
-  const combine = combineYieldTransforms([x => x]);
+  const got = transform(TEST_VALUE);
+  const expected = {success: true, value: TEST_VALUE};
 
-  const tests = jsc.forall(
-    'json',
-    testValue => (
-      combine(testValue).then(
-        value => assert.equal(value, testValue)
-      )
-      .then(() => true)
-    )
-  );
-
-  return jsc.assert(tests, {tests: 20});
+  t.deepEqual(got, expected);
+  t.end();
 });
 
 
-test('combineYieldTransforms handles single promise-based identity transform', () => {
-  const combine = combineYieldTransforms([x => Promise.resolve(() => x)]);
+test('combineYieldTransforms handles a single failing transform', t => {
+  const TEST_VALUE = 'test value';
+  const failingTransform = () => ({success: false});
+  const combined = combineYieldTransforms([failingTransform]);
 
-  const tests = jsc.forall(
-    'json',
-    testValue => (
-      combine(testValue).then(
-        value => assert.equal(value, testValue)
-      )
-      .then(() => true)
-    )
-  );
+  const got = combined(TEST_VALUE);
 
-  return jsc.assert(tests, {tests: 20});
+  t.equal(got.success, false);
+  t.end();
 });
 
 
-test('combineYieldTransforms handles transformations which resolve with promises, which later get rejected', () => {
-  const TEST_ERROR = 'test error';
-  const transform = () => (
-    Promise.resolve(() => Promise.reject(TEST_ERROR))
-  );
 
-  return combineYieldTransforms([transform])()
-          .then(
-            () => {throw 'expected to be rejected'},
-            x => { assert.equal(x, TEST_ERROR); }
-          );
+test('combineYieldTransforms handles two transforms - resolving with the first successful one', t => {
+  const TEST_VALUE = 'test value';
+  const identityTransform = x => ({success: true, value: x});
+  const failingTransform = () => ({success: false});
+
+  const combined = combineYieldTransforms([failingTransform, identityTransform]);
+
+
+  const got = combined(TEST_VALUE);
+  const expected = {success: true, value: TEST_VALUE};
+
+
+  t.deepEqual(got, expected);
+  t.end();
 });
 
 
-test('combineYieldTransforms returns a rejected promise with the correct error if all transforms were rejected', () => {
-  const firstTransform = () => { throw 'error'; };
-  const secondTransform = () => { throw 'error'; };
-
-  const combination = combineYieldTransforms([firstTransform, secondTransform]);
-
-  return expectToFailWith(
-          Promise.attempt(() => combination('test')),
-          'combineYieldTransforms error: none of the transforms resolved'
-        );
-});
-
-
-test('combineYieldTransforms takes the first (by order) resolved transform when passed synchronous transforms', () => {
+test('combineYieldTransforms handles two transforms - resolving with the first successful one (a more complex case)', t => {
   const firstTransform = x => {
-    if (x === 1) return 2;
-    throw 'error';
+    if (x === 1) return {success: true, value: 2};
+    return {success: false};
   };
   const secondTransform = x => {
-    if (x === 2) return 3;
-    return 4;
+    if (x === 2) return {success: true, value: 3};
+    return {success: true, value: 4};
   };
-
   const combination = combineYieldTransforms([firstTransform, secondTransform]);
 
-  return Promise.all([
-    combination(1),
-    combination(2),
-    combination(3)
-  ]).then( ([first, second, third]) => {
-    assert.equal(first, 2, 'first passes');
-    assert.equal(second, 3, 'second passes');
-    assert.equal(third, 4, 'third passes');
-    return true;
-  });
+
+  t.deepEqual(combination(1), {success: true, value: 2});
+  t.deepEqual(combination(2), {success: true, value: 3});
+  t.deepEqual(combination(3), {success: true, value: 4});
+
+
+  t.end();
 });
 
 
 
-test('combineYieldTransforms handles the mixed type transforms', () => {
-  const firstTransform = x => {
-    if (x === 2) return 3;
-    
-    return Promise.reject();
-  };
-  const secondTransform = x => {
-    if (x === 1) throw 'error';
-    return 1;
-  };
-  const thirdTransform = () => {
-    return 2;
-  };
+test('combineYieldTransforms returns a {success: false} if all transforms were rejected', t => {
+  const TEST_VALUE = 'test value';
+  const failingTransform = () => ({success: false});
+  const combined = combineYieldTransforms([failingTransform, failingTransform]);
 
-  const combination = combineYieldTransforms([firstTransform, secondTransform, thirdTransform]);
+  const got = combined(TEST_VALUE);
 
-  return Promise.all([
-    combination(0),
-    combination(1),
-    combination(2)
-  ])
-  .then( ([first, second, third]) => {
-    assert.equal(first, 1);
-    assert.equal(second, 2);
-    assert.equal(third, 3);
-  });
+  t.equal(got.success, false);
+  t.end();
 });
+
+
+
+// ===================== //
+// =      nesting      = //
+// ===================== //
+
+
+
+test(`combineYieldTransforms' composition is associative (allows for nesting)`, t => {
+  const transforms = [
+    x => {
+      if (x === 2) return {success: true, value: 3};
+      return {success: false};
+    },
+    x => {
+      if (x === 1) return {success: false};
+      return {success: true, value: 1};
+    },
+
+    () => ({success: true, value: 2})
+  ];
+  const [first, second, third] = transforms;
+
+
+  const testCombination = combinationResult => {
+    t.deepEqual(combinationResult(0), {success: true, value: 1});
+    t.deepEqual(combinationResult(1), {success: true, value: 2});
+    t.deepEqual(combinationResult(2), {success: true, value: 3});
+    t.deepEqual(combinationResult(3), {success: true, value: 1});
+  }
+
+  // tesing the associativity law
+  [
+    combineYieldTransforms(transforms),
+    combineYieldTransforms([ combineYieldTransforms([first, second]), third ]),
+    combineYieldTransforms([ first, combineYieldTransforms([second, third]) ]),
+    combineYieldTransforms([ combineYieldTransforms([first]), combineYieldTransforms([second]), combineYieldTransforms([third]) ])
+  ].forEach(testCombination);
+
+
+  t.end();
+});
+
 

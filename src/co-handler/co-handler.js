@@ -6,11 +6,11 @@ import {isGeneratorFunction} from '../utils';
 import runCo from '../co-dispatchable';
 
 export default combineYieldTransforms([
-  wrapPromiseValue,
-  generatorFunctionToPromise,
+  // wrapPromiseValue,
+  // generatorFunctionToPromise,
   arrayToPromise,
-  objectToPromise,
-  x => x
+  // objectToPromise,
+  x => ({result: true, value: x})
 ]);
 
 function wrapPromiseValue(x) {
@@ -22,9 +22,9 @@ function wrapPromiseValue(x) {
 function arrayToPromise(arr) {
   if (!is.array(arr)) throw new Error('not an array');
 
-  return Promise.resolve(() => 
-    Promise.all(arr)
-  );
+  return {
+    result: true, value: Promise.all(arr)
+  };
 }
 
 function objectToPromise(obj) {

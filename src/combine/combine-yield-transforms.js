@@ -1,47 +1,21 @@
 import is from 'is';
-import {isPromise} from '../utils';
-import Promise from 'bluebird';
 
-const wrapInTransformResult = getTransformedValue => {
-  try {
-    const transformed = getTransformedValue();
 
-    if (isPromise(transformed)) {
-      return (transformed.then(
-        getValue => ({ success: true,  value: getValue() }),
-        err => ({ success: false, value: err })
-      ));
-    }
-
-    return { success: true, value: transformed };
-  } catch (e) {
-    return { success: false };
-  }
-}
-
-export default function(transforms) {
+export default function combineYieldTransforms(transforms) {
   assertArrayOfFunctions(transforms);
 
   return value => {
-    if ( (transforms.length == 0) ) {
-      return Promise.resolve(value);
-    }
+    const transformsEmpty = (transforms.length === 0);
+    if (transformsEmpty) return {success: true, value};
 
-    const transformPromises = transforms.map(
-      transform => ( wrapInTransformResult(() => transform(value)) ) //wraping is needed for running Promise.all()
-    );
+    const successfulTransforms = transforms.map( transform => transform(value) )
+                                           .filter(res => (res.success === true));
 
-    return Promise.all(transformPromises)
-      .then(results => {
-        const successfulResultValues = results.filter(result => result.success)
-                                              .map(result => result.value);
+    const hasSuccessful = successfulTransforms.length > 0;
+    if (!hasSuccessful) return {success: false, value: null};
 
-        if (successfulResultValues.length === 0) {
-          throw new Error('combineYieldTransforms error: none of the transforms resolved');
-        }
-
-        return successfulResultValues[0];
-      })
+    const firstSuccessful = successfulTransforms[0];
+    return firstSuccessful;
   };
 }
 
