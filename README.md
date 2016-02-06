@@ -85,7 +85,7 @@ If none cases were matched, the yielded value remains unchanged.
 
 # API
 
-##### note: the Maybe type is imported from ![ramda-fantasy](https://www.npmjs.com/package/ramda-fantasy)
+##### note: the Maybe type is imported from [ramda-fantasy](https://www.npmjs.com/package/ramda-fantasy)
 
 
 ## Functions
