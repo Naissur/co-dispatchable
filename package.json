@@ -1,6 +1,6 @@
 {
   "name": "co-dispatchable",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Generator runner with support for custom yield transformations",
   "main": "index.js",
   "scripts": {
