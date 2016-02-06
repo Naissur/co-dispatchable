@@ -1,12 +1,15 @@
 require('babel-polyfill');
 import is from 'is';
 import combineYieldTransforms from './combine-yield-transforms';
-import {has} from 'ramda';
+// import {has} from 'ramda';
 
 // import jsc from 'jsverify';
 import {expectToFailWith} from '../test-utils';
 import {test} from 'tap';
 import Promise from 'bluebird';
+
+import {Maybe} from 'ramda-fantasy';
+const {Just, Nothing} = Maybe;
 
 
 
@@ -20,15 +23,6 @@ test('combineYieldTransforms exports a function by default', t => {
   t.end();
 });
 
-
-test('combineYieldTransforms returns a function, returning an object with shape {success: Bool, result: *}', t => {
-  const combineResult = combineYieldTransforms([])();
-
-  t.assert(is.bool(combineResult.success), `has .success, which is boolean, got ${JSON.stringify(combineResult)}`);
-  t.assert(has('value', combineResult), `has .value, got ${JSON.stringify(combineResult)}`);
-
-  t.end();
-});
 
 
 test('combineYieldTransforms throws a correct error if called with non-array', () => {
@@ -80,20 +74,19 @@ test('combineYieldTransforms is the identity transform if called without argumen
   const TEST_VALUE = {test: 'test', anotherTest: 'anotherTest'};
 
   const got = transform(TEST_VALUE);
-  const expected = {success: true, value: TEST_VALUE};
+  const expected = Just(TEST_VALUE);
 
   t.deepEqual(got, expected);
   t.end();
 });
 
 
-
 test('combineYieldTransforms handles single identity transform', t => {
-  const transform = combineYieldTransforms([x => ({success: true, value: x})]);
+  const transform = combineYieldTransforms([x => Just(x)]);
   const TEST_VALUE = {test: 'test', anotherTest: 'anotherTest'};
 
   const got = transform(TEST_VALUE);
-  const expected = {success: true, value: TEST_VALUE};
+  const expected = Just(TEST_VALUE);
 
   t.deepEqual(got, expected);
   t.end();
@@ -102,27 +95,26 @@ test('combineYieldTransforms handles single identity transform', t => {
 
 test('combineYieldTransforms handles a single failing transform', t => {
   const TEST_VALUE = 'test value';
-  const failingTransform = () => ({success: false});
+  const failingTransform = () => Nothing();
   const combined = combineYieldTransforms([failingTransform]);
 
   const got = combined(TEST_VALUE);
 
-  t.equal(got.success, false);
+  t.assert(got.isNothing(), 'returns Nothing');
   t.end();
 });
 
 
-
 test('combineYieldTransforms handles two transforms - resolving with the first successful one', t => {
   const TEST_VALUE = 'test value';
-  const identityTransform = x => ({success: true, value: x});
-  const failingTransform = () => ({success: false});
+  const identityTransform = x => Just(x);
+  const failingTransform = () => Nothing();
 
   const combined = combineYieldTransforms([failingTransform, identityTransform]);
 
 
   const got = combined(TEST_VALUE);
-  const expected = {success: true, value: TEST_VALUE};
+  const expected = Just(TEST_VALUE);
 
 
   t.deepEqual(got, expected);
@@ -130,21 +122,22 @@ test('combineYieldTransforms handles two transforms - resolving with the first s
 });
 
 
+
 test('combineYieldTransforms handles two transforms - resolving with the first successful one (a more complex case)', t => {
   const firstTransform = x => {
-    if (x === 1) return {success: true, value: 2};
-    return {success: false};
+    if (x === 1) return Just(2);
+    return Nothing();
   };
   const secondTransform = x => {
-    if (x === 2) return {success: true, value: 3};
-    return {success: true, value: 4};
+    if (x === 2) return Just(3);
+    return Just(4);
   };
   const combination = combineYieldTransforms([firstTransform, secondTransform]);
 
 
-  t.deepEqual(combination(1), {success: true, value: 2});
-  t.deepEqual(combination(2), {success: true, value: 3});
-  t.deepEqual(combination(3), {success: true, value: 4});
+  t.deepEqual(combination(1), Just(2) );
+  t.deepEqual(combination(2), Just(3) );
+  t.deepEqual(combination(3), Just(4) );
 
 
   t.end();
@@ -154,12 +147,12 @@ test('combineYieldTransforms handles two transforms - resolving with the first s
 
 test('combineYieldTransforms returns a {success: false} if all transforms were rejected', t => {
   const TEST_VALUE = 'test value';
-  const failingTransform = () => ({success: false});
+  const failingTransform = () => Nothing();
   const combined = combineYieldTransforms([failingTransform, failingTransform]);
 
   const got = combined(TEST_VALUE);
 
-  t.equal(got.success, false);
+  t.equal(got.isNothing(), true);
   t.end();
 });
 
@@ -173,25 +166,18 @@ test('combineYieldTransforms returns a {success: false} if all transforms were r
 
 test(`combineYieldTransforms' composition is associative (allows for nesting)`, t => {
   const transforms = [
-    x => {
-      if (x === 2) return {success: true, value: 3};
-      return {success: false};
-    },
-    x => {
-      if (x === 1) return {success: false};
-      return {success: true, value: 1};
-    },
-
-    () => ({success: true, value: 2})
+    x => (x === 2) ? Just(3) : Nothing(),
+    x => (x === 1) ? Nothing() : Just(1),
+    () => Just(2)
   ];
   const [first, second, third] = transforms;
 
 
   const testCombination = combinationResult => {
-    t.deepEqual(combinationResult(0), {success: true, value: 1});
-    t.deepEqual(combinationResult(1), {success: true, value: 2});
-    t.deepEqual(combinationResult(2), {success: true, value: 3});
-    t.deepEqual(combinationResult(3), {success: true, value: 1});
+    t.deepEqual(combinationResult(0), Just(1) );
+    t.deepEqual(combinationResult(1), Just(2) );
+    t.deepEqual(combinationResult(2), Just(3) );
+    t.deepEqual(combinationResult(3), Just(1) );
   }
 
   // tesing the associativity law
@@ -205,5 +191,4 @@ test(`combineYieldTransforms' composition is associative (allows for nesting)`, 
 
   t.end();
 });
-
 

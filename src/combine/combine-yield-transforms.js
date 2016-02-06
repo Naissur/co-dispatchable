@@ -1,18 +1,21 @@
 import is from 'is';
 
+import {Maybe} from 'ramda-fantasy';
+const {Just, Nothing} = Maybe;
+
 
 export default function combineYieldTransforms(transforms) {
   assertArrayOfFunctions(transforms);
 
   return value => {
     const transformsEmpty = (transforms.length === 0);
-    if (transformsEmpty) return {success: true, value};
+    if (transformsEmpty) return Just(value);
 
     const successfulTransforms = transforms.map( transform => transform(value) )
-                                           .filter(res => (res.success === true));
+                                           .filter(res => res.isJust());
 
     const hasSuccessful = successfulTransforms.length > 0;
-    if (!hasSuccessful) return {success: false, value: null};
+    if (!hasSuccessful) return Nothing();
 
     const firstSuccessful = successfulTransforms[0];
     return firstSuccessful;
