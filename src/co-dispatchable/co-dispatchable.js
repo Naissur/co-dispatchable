@@ -2,7 +2,10 @@ import is from 'is';
 import Promise from 'bluebird';
 import {isPromise, isGeneratorFunction} from '../utils';
 
-export default function run(generatorFunc, transformYield = (x => x)) {
+import {Maybe} from 'ramda-fantasy';
+const {Just} = Maybe;
+
+export default function run(generatorFunc, transformYield = (x => Just(x))) {
   if (!isGeneratorFunction(generatorFunc)) {
     throw new Error(`run: ${ JSON.stringify(generatorFunc) } is not a valid generator function`);
   }
@@ -40,7 +43,14 @@ export default function run(generatorFunc, transformYield = (x => x)) {
       }
 
       function next(ret) {
-        const transformedValue = transformYield(ret.value);
+        const transformedMaybe = transformYield(ret.value);
+
+        if (transformedMaybe.isNothing()) { 
+          throw new Error(`run: transformYield didn't resolve on ${JSON.stringify(ret.value, null, ' ')}`);
+        };
+
+        const transformedValue = transformedMaybe.getOrElse();
+
         if (!ret.done) {
           if (isPromise(transformedValue)) {
             transformedValue.then( onFulfill, onReject );

@@ -1,12 +1,16 @@
 require('babel-polyfill');
 import run from './co-dispatchable';
 import is from 'is';
-import jsc from 'jsverify';
+// import jsc from 'jsverify';
 import assert from 'assert';
 
 import {expectToFailWith} from '../test-utils';
 import {test} from 'tap';
 import Promise from 'bluebird';
+import combine from '../combine';
+
+import {Maybe} from 'ramda-fantasy';
+const {Just, Nothing} = Maybe;
 
 test('run exists', t => {
   t.equal(is.defined(run), true);
@@ -41,7 +45,7 @@ test('run throws correct error when called with invalid args not with a function
 });
 
 test('run returns a promise', t => {
-  const result = run(function* () {}, () => {});
+  const result = run(function* () {});
   
   if (is.defined(result.then)) { t.pass(); } else { t.fail(); }
   t.end();
@@ -57,13 +61,29 @@ test('run takes a generator, and invokes its .next()', t => {
     yield testValue;
   }
 
-  run(generator, () => {});
+  run(generator);
 
   setTimeout(() => {
     t.equal(called, true);
     t.end();
   }, 0);
 });
+
+test(`run's promise gets rejected if the yield handler returns [Nothing], with the correct error`, () => {
+  const TEST_VALUE = {a: 1, b: 2};
+
+
+  const generator = function* () { yield TEST_VALUE; };
+  const transformYield = () => Nothing();
+
+
+  return expectToFailWith(
+    run(generator, transformYield),
+    `run: transformYield didn't resolve on ${JSON.stringify(TEST_VALUE, null, ' ')}`
+  );
+});
+
+
 
 
 test(`run's promise gets rejected if the generator throwed unhandled error, with the correct message`, () => {
@@ -95,142 +115,94 @@ test(`run's promise gets rejected if the yielded promise rejection has not been 
 
 
 test('run resumes the passed generator with a result of yieldHandler applied to the yield expression returned value', () => {
-  const tests = jsc.forall(
-     'json', 'json',
-    (_testYield, _testYieldHandlerReturnValue) => (
-      (function(testYield, testYieldHandlerReturnValue){
-        let resumedWith;
+  const TEST_VALUE = 'TEST_VALUE';
+  const TEST_YIELD_VALUE = 'TEST_YIELD_VALUE';
 
-        const generator = function* () { resumedWith = yield testYield; }
-        const yieldHandler = value => ( value === testYield ? testYieldHandlerReturnValue : null);
+  const generator = function* () { 
+    const yielded = yield TEST_VALUE;
 
-        return run(generator, yieldHandler)
-              .then( () => {
-                assert.equal(resumedWith, testYieldHandlerReturnValue);
-                return true;
-              });
-      })(_testYield, _testYieldHandlerReturnValue)
-    )
-  );
+    if (yielded === TEST_YIELD_VALUE) return true;
+    throw 'got the wrong yielded value';
+  };
+  const yieldHandler = combine([
+    value => (value == TEST_VALUE) ? Just(TEST_YIELD_VALUE) : Nothing(),
+    val => Just(val)
+  ]);
 
-  return jsc.assert(tests, {tests: 20});
+
+  return run(generator, yieldHandler);
 });
 
 
-test('run resumes the passed generator with a resolved value of ' +
-     'yieldHandler applied to the yield expression return value, if yieldHandler returns a Promise', () => {
+test('run handles yielded promises', () => {
+  const TEST_VALUE = 'TEST_VALUE';
+  const TEST_YIELD_VALUE = 'TEST_YIELD_VALUE';
 
-  const tests = jsc.forall(
-     'json', 'json',
-    (_testYield, _yieldHandlerPromiseValue) => (
-      (function(testYield, yieldHandlerPromiseValue){
-        let resumedWith;
+  const generator = function* () { 
+    const yielded = yield TEST_VALUE;
 
-        const generator = function* () { resumedWith = yield testYield; }
-        const yieldHandler = value => ( value === testYield ? Promise.resolve(yieldHandlerPromiseValue) : null);
+    if (yielded === TEST_YIELD_VALUE) return true;
+    throw 'got the wrong yielded value';
+  };
+  const yieldHandler = combine([
+    value => (value == TEST_VALUE) ? Just(Promise.resolve(TEST_YIELD_VALUE)) : Nothing(),
+    val => Just(val)
+  ]);
 
-        return run(generator, yieldHandler)
-              .then( () => {
-                assert.equal(resumedWith, yieldHandlerPromiseValue);
-                return true;
-              });
-      })(_testYield, _yieldHandlerPromiseValue)
-    )
-  );
 
-  return jsc.assert(tests, {tests: 20});
+  return run(generator, yieldHandler);
 });
 
-test('run runs correctly with yielded promises and identity yield handler', () => {
-  const testValue = 'testValue';
-  const testPromise = Promise.resolve(testValue);
-  let resumedWith;
 
-  const generator = function* () { resumedWith = yield testPromise; }
 
-  return run(generator, x => x)
-        .then( () => {
-          assert.equal(resumedWith, testValue);
+test(`run's promise gets rejected if the returned promises fails, with the same error`, () => {
+  const TEST_VALUE = 'TEST_VALUE';
+  const TEST_ERROR = 'TEST_ERROR';
+
+  const generator = function* () { 
+    try {
+      yield TEST_VALUE;
+    } catch (e) {
+      if (e == TEST_ERROR) return true;
+    }
+
+    throw `did't throw an error`;
+  };
+  const yieldHandler = combine([
+    x => (x == TEST_VALUE) ? Just(Promise.reject(TEST_ERROR)) : Nothing(),
+    x => Just(x)
+  ]);
+
+
+  return run(generator, yieldHandler);
+});
+
+
+
+test('run runs a generator in a loop, invoking its .next() until it runs out of input', () => {
+  const TEST_VALUE_1 = 'TEST_VALUE_1';
+  const TEST_VALUE_2 = 'TEST_VALUE_2';
+  const TEST_VALUE_3 = 'TEST_VALUE_3';
+  const SUCCESS = 'SUCCESS';
+
+  const generator = function* () {
+    const first = yield TEST_VALUE_1;
+    if (first !== TEST_VALUE_1) throw 'first transformed yield value is incorrect';
+
+    const second = yield TEST_VALUE_2;
+    if (second !== TEST_VALUE_2) throw 'second transformed yield value is incorrect';
+
+    const third = yield TEST_VALUE_3;
+    if (third !== TEST_VALUE_3) throw 'third transformed yield value is incorrect';
+
+    return SUCCESS;
+  }
+
+  return run(generator)
+        .then( result => {
+          assert.equal(result, SUCCESS);
+          return true;
         });
 });
 
-test(`run's promise gets rejected if the returned promises fails, with the same error`, () => {
-  const tests = jsc.forall( 'json',
-    _testError => (function(testError){
-      const firstTestPromise = Promise.reject(testError + '_');
-      const testPromise = Promise.reject(testError);
-
-      const generator = function* () { 
-        try {
-          yield firstTestPromise;
-        } catch(e) {
-          // do not fail here
-        }
-        return testPromise;
-      }
-
-      return run(generator)
-            .then( () => {
-              throw 'Expected to fail';
-            }, err => {
-              assert.equal(err, testError);
-              return true;
-            });
-    })(_testError)
-  );
-  
-  return jsc.assert(tests, {tests: 20});
-});
-
-test('run runs a generator in a loop, invoking its .next() until it runs out of input', () => {
-  const tests = jsc.forall(
-    'json', 'json',
-    (_testValue, _testYieldHandlerValue) => (function(testValue, testYieldHandlerValue) {
-      let timesCalled = 0;
-
-      const generator = function* () {
-        timesCalled++;
-        yield testValue;
-        timesCalled++;
-        yield Promise.resolve(testValue);
-        timesCalled++;
-        return testValue;
-      }
-
-      const yieldHandler = x => x == testValue ? testYieldHandlerValue : null;
-
-      return run(generator, yieldHandler)
-            .then( result => {
-              assert.equal(result, testYieldHandlerValue);
-              assert.equal(timesCalled, 3);
-              return true;
-            });
-    })(_testValue, _testYieldHandlerValue)
-  );
-
-  return jsc.assert(tests, {tests: 20});
-});
-
-test('run resolves the returned promise with the last yielded value', () => {
-  const tests = jsc.forall(
-    'json', 'json',
-    (_testValue, _testYieldHandlerValue) => (function(testValue, testYieldHandlerValue) {
-      const generator = function* () {
-        yield '';
-        yield Promise.resolve(null);
-        return testValue;
-      }
-
-      const yieldHandler = x => x == testValue ? testYieldHandlerValue : null;
-
-      return run(generator, yieldHandler)
-            .then( result => {
-              assert.equal(result, testYieldHandlerValue);
-              return true;
-            });
-    })(_testValue, _testYieldHandlerValue)
-  );
-
-  return jsc.assert(tests, {tests: 20});
-});
 
