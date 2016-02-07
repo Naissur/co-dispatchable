@@ -103,6 +103,14 @@ A helper function for combining the yield transforms.
 
 It returns a transform function which, when tested against some yield, calls all of the transforms and resolves with the value returned by the first (by order) successful one. If all of the transforms fail, it returns `Nothing`.
 
+The main law for this function is **associativity**:
+
+```javascript
+  combine(a, b, c) === combine( combine(a, b), c ) === combine( a, combine(b, c) )
+```
+
+( `===` means **functional** equality: when feeded with any given transformers `a, b, c` and input `x`, they produce the same results )
+
 
 ## Types
 
