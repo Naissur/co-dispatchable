@@ -1,6 +1,7 @@
 # co-dispatchable (WIP)
 [![Build Status](https://travis-ci.org/Naissur/co-dispatchable.svg?branch=master)](https://travis-ci.org/Naissur/co-dispatchable)
 [![Coverage Status](https://coveralls.io/repos/Naissur/co-dispatchable/badge.svg?branch=master&service=github)](https://coveralls.io/github/Naissur/co-dispatchable?branch=master)
+[![npm package](https://badge.fury.io/js/co-dispatchable.svg)](https://badge.fury.io/js/co-dispatchable)
 
 Generator runner with support for custom yield transformations
 
